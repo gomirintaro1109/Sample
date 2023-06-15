@@ -6,6 +6,7 @@
 //
 import UIKit
 import SDWebImage
+
 //ポケモンの情報を表す構造体
 struct Pokemon: Codable {
     let id: Int
@@ -16,9 +17,10 @@ struct Pokemon: Codable {
 struct Sprites: Codable {
     let front_default: String
 }
+
 // カスタムのUICollectionViewCellサブクラス
-class CustomCell: UICollectionViewCell {
-    let imageView = UIImageView()
+final class CustomCell: UICollectionViewCell {
+    let avatarImageView = UIImageView()
     let idLabel = UILabel()
     let nameLabel = UILabel()
 
@@ -30,8 +32,10 @@ class CustomCell: UICollectionViewCell {
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+}
 
-    private func setupViews() {
+private extension CustomCell {
+    func setupViews() {
         // サブビューの設定とレイアウトの構成
         // 赤色の上半分
         let redView = UIView()
@@ -58,14 +62,14 @@ class CustomCell: UICollectionViewCell {
         ])
 
         // 画像ビューの設定
-        imageView.contentMode = .scaleAspectFit
-        contentView.addSubview(imageView)
-        imageView.translatesAutoresizingMaskIntoConstraints = false
+        avatarImageView.contentMode = .scaleAspectFit
+        contentView.addSubview(avatarImageView)
+        avatarImageView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            imageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            imageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            imageView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.8),
-            imageView.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.4)
+            avatarImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            avatarImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            avatarImageView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.8),
+            avatarImageView.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 0.4)
         ])
 
         // IDラベルの設定
@@ -84,7 +88,7 @@ class CustomCell: UICollectionViewCell {
         contentView.addSubview(nameLabel)
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            nameLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8.0),
+            nameLabel.topAnchor.constraint(equalTo: avatarImageView.bottomAnchor, constant: 8.0),
             nameLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8.0),
             nameLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8.0),
             nameLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8.0)
@@ -96,17 +100,18 @@ class CustomCell: UICollectionViewCell {
         contentView.clipsToBounds = true
     }
 }
-// コレクションビューを表示するビューコントローラー
-class ViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
-    @IBOutlet weak var zukann: UICollectionView!
+// コレクションビューを表示するビューコントローラー
+final class ViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+
+    @IBOutlet weak var pokemonListCollectionView: UICollectionView!
     var pokemonList = [Pokemon]()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // デリゲートを自身に設定
-        zukann.delegate = self
+        pokemonListCollectionView.delegate = self
         
         // コレクションビューレイアウトを設定
         let layout = UICollectionViewFlowLayout()
@@ -114,10 +119,10 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
         layout.minimumLineSpacing = 5.0
         layout.minimumInteritemSpacing = 5.0
         layout.sectionInset = UIEdgeInsets(top: 0, left: 16, bottom: 16, right: 16)
-        zukann.collectionViewLayout = layout
+        pokemonListCollectionView.collectionViewLayout = layout
         
         // カスタムセルクラスを登録
-        zukann.register(CustomCell.self, forCellWithReuseIdentifier: "Cell")
+        pokemonListCollectionView.register(CustomCell.self, forCellWithReuseIdentifier: "Cell")
         // IDが1から151までのポケモンデータを取得
         for id in 1...151 {
             fetchPokemon(id: id)
@@ -135,11 +140,11 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
                     let pokemon = try JSONDecoder().decode(Pokemon.self, from: data)
                     self.pokemonList.append(pokemon)
                     DispatchQueue.main.async {
-                        self.zukann.reloadData()
+                        self.pokemonListCollectionView.reloadData()
                         //IDの順番にソート
                         self.pokemonList.sort {$0.id < $1.id}
                         DispatchQueue.main.async {
-                            self.zukann.reloadData()
+                            self.pokemonListCollectionView.reloadData()
                         }
                     }
                 } catch {
@@ -164,7 +169,7 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
             cell.nameLabel.text = pokemon.name
 
             if let imageUrl = URL(string: pokemon.sprites.front_default) {
-                cell.imageView.sd_setImage(with: imageUrl, placeholderImage: UIImage(named: "placeholder.png"))
+                cell.avatarImageView.sd_setImage(with: imageUrl, placeholderImage: UIImage(named: "placeholder.png"))
             }
         }
         return cell
